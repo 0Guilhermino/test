@@ -48,12 +48,12 @@
       // Android
         window.alert('antes do if personal')
         window.alert(JSON.stringify(window.Personal));
-        const text = JSON.stringify(window);
+        const text = window.Personal;
         document.getElementById('content').innerHTML = `<p>Document Number: ${text}</p>`;
         document.getElementById('content').innerHTML = `<p>Document Number: ${window.Personal.getToken('anyParam')}</p>`;
       
 
-         window.alert(JSON.stringify(window.Personal));
+         window.alert(window.Personal);
         token = window.Personal.getToken('anyParam');
           window.alert(token)
         localStorage.setItem("auth", token);
