@@ -1,177 +1,130 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<!-- saved from url=(0073)https://personal.qa.globalhealth.mv/samples/document_webview_example.html -->
+<html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Debug Android WebView</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.0/axios.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jwt-decode/3.1.2/jwt-decode.min.js"></script>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document Number Validation</title>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jwt-decode/build/jwt-decode.min.js"></script>
 </head>
-<body>
-    <div id="content">
-        <p>Carregando...</p>
-    </div>
 
-    <script>
-        function validateToken(token) {
-            console.log('🔐 DEBUG: Iniciando validateToken com token:', token);
-            
-            return axios.get('https://prod.globalhealth.mv/uaa/validate/token', {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            })
-                .then(response => {
-                    console.log('✅ DEBUG: Token validado com sucesso:', response);
-                    return true;
-                })
-                .catch(error => {
-                    console.error('❌ DEBUG: Erro na validação do token:', error.response ? error.response.data : error.message);
-                    return false;
-                });
+<body >
+  <div id="content">
+    <p>Não podemos exibir as informações, pois não foi informado nenhum token</p>
+  </div>
+
+  <script>
+    function validateToken(token) {
+      return axios.get('https://prod.globalhealth.mv/uaa/validate/token', {
+        headers: {
+          'Authorization': `Bearer ${token}`
         }
+      })
+        .then(response => true) // ajuste conforme necessário com base na resposta do endpoint
+        .catch(error => {
+          console.error('Erro na validação do token:', error.response ? error.response.data : error.message);
+          return false;
+        });
+    }
 
-        function decodeToken(token) {
-            console.log('🔓 DEBUG: Iniciando decodeToken com token:', token);
-            
-            try {
-                const decoded = jwt_decode(token);
-                console.log('✅ DEBUG: Token decodificado:', decoded);
-                console.log('📄 DEBUG: documentNumber extraído:', decoded.documentNumber);
-                return decoded.documentNumber;
-            } catch (error) {
-                console.error('❌ DEBUG: Erro ao decodificar o token:', error.message);
-                return null;
-            }
-        }
+    function decodeToken(token) {
+      try {
+        const decoded = jwt_decode(token);
+        return decoded.documentNumber; // Extraindo documentNumber do JSON decodificado
+      } catch (error) {
+        console.error('Erro ao decodificar o token:', error.message);
+        return null;
+      }
+    }
 
-        async function authCommitment() {
-            console.log('🚀 DEBUG: Iniciando authCommitment()');
-            
-            let token = '';
-            let language = '';
-            let clientKey = '';
+    async function authCommitment() {
+      let token = '';
+      let language = '';
+      let clientKey = '';
 
-            // DEBUG: Verificar se window.Personal existe
-            console.log('🔍 DEBUG: Verificando window.Personal:', window.Personal);
-            
-            if (window.Personal) {
-                console.log('✅ DEBUG: window.Personal existe:', window.Personal);
-                alert('DEBUG: window.Personal encontrado!');
-                
-                console.log('📱 DEBUG: Entrando no bloco Android');
-                alert('DEBUG: Entrou no bloco Android (window.Personal)');
-                
-                console.log('🎯 DEBUG: Chamando window.Personal.getToken()');
-                token = window.Personal.getToken('anyParam');
-                console.log('🔑 DEBUG: Token obtido:', token);
-                alert('DEBUG: Token obtido: ' + (token ? token.substring(0, 50) + '...' : 'VAZIO'));
-                
-                if (token) {
-                    console.log('💾 DEBUG: Salvando token no localStorage');
-                    localStorage.setItem("auth", token);
-                    alert('DEBUG: Token salvo no localStorage');
-                    
-                    console.log('🌐 DEBUG: Obtendo language');
-                    language = window.Personal.getLanguage();
-                    console.log('🌍 DEBUG: Language obtido:', language);
-                    alert('DEBUG: Language: ' + language);
-                    
-                    console.log('🔑 DEBUG: Obtendo clientKey');
-                    clientKey = window.Personal.getClientKey();
-                    console.log('🗝️ DEBUG: ClientKey obtido:', clientKey);
-                    alert('DEBUG: ClientKey: ' + clientKey);
-                } else {
-                    console.log('❌ DEBUG: Token está vazio');
-                    alert('DEBUG: ERRO - Token vazio!');
-                }
+      // Android
+        window.alert('antes do if personal')
+        window.alert(JSON.stringify(window.Personal));
+        
+      if (window.Personal) {
+          window.alert(JSON.stringify(window.Personal));
+        token = window.Personal.getToken('anyParam');
+          window.alert(token, 'window.alert toke')
+        localStorage.setItem("auth", token);
+        language = window.Personal.getLanguage();
+        clientKey = window.Personal.getClientKey();
+      }
+
+      // iOS
+      window.setConfig = async function (tokenParam, languageParam, clientKeyParam) {
+        if (tokenParam && languageParam) {
+          token = tokenParam;
+          localStorage.setItem("auth", token);
+          language = languageParam;
+          clientKey = clientKeyParam;
+          const isValid = await validateToken(token);
+          if (isValid) {
+            const documentNumber = decodeToken(token);
+            if (documentNumber) {
+              document.getElementById('content').innerHTML = `<p>Document Number: ${documentNumber}</p>`;
             } else {
-                console.log('❌ DEBUG: window.Personal NÃO existe');
-                alert('DEBUG: window.Personal NÃO encontrado!');
+              document.getElementById('content').innerHTML = '<p>Não podemos exibir as informações</p>';
             }
-
-            // iOS
-            window.setConfig = async function (tokenParam, languageParam, clientKeyParam) {
-                console.log('🍎 DEBUG: setConfig chamado (iOS)');
-                
-                if (tokenParam && languageParam) {
-                    token = tokenParam;
-                    localStorage.setItem("auth", token);
-                    language = languageParam;
-                    clientKey = clientKeyParam;
-                    const isValid = await validateToken(token);
-                    if (isValid) {
-                        const documentNumber = decodeToken(token);
-                        if (documentNumber) {
-                            document.getElementById('content').innerHTML = `<p>Document Number: ${documentNumber}</p>`;
-                        } else {
-                            document.getElementById('content').innerHTML = '<p>Não podemos exibir as informações</p>';
-                        }
-                    } else {
-                        document.getElementById('content').innerHTML = '<p>Não podemos exibir as informações</p>';
-                    }
-                }
-            };
-
-            // EXEMPLO IMPLEMENTAÇÃO PERSONAL-WEB
-            window.addEventListener('message', async (event) => {
-                console.log('💬 DEBUG: Mensagem recebida (Personal-Web):', event.data);
-
-                const { token, language, clientKey } = event.data;
-
-                if (token && language && clientKey) {
-                    localStorage.setItem("auth", token);
-                    const isValid = await validateToken(token);
-                    if (isValid) {
-                        const documentNumber = decodeToken(token);
-                        if (documentNumber) {
-                            document.getElementById('content').innerHTML = `<p>Document Number: ${documentNumber}</p>`;
-                        } else {
-                            document.getElementById('content').innerHTML = '<p>Não podemos exibir as informações</p>';
-                        }
-                    } else {
-                        document.getElementById('content').innerHTML = '<p>Não podemos exibir as informações</p>';
-                    }
-                } else {
-                    document.getElementById('content').innerHTML = '<p>Não podemos exibir as informações, dados ausentes ou inválidos.</p>';
-                }
-            });
-
-            // Caso o token já esteja presente na Web
-            console.log('🌐 DEBUG: Verificando se já existe token:', token);
-            
-            if (token) {
-                console.log('✅ DEBUG: Token encontrado, validando...');
-                alert('DEBUG: Iniciando validação do token');
-                
-                const isValid = await validateToken(token);
-                console.log('🔐 DEBUG: Resultado da validação:', isValid);
-                alert('DEBUG: Token válido: ' + isValid);
-                
-                if (isValid) {
-                    console.log('✅ DEBUG: Token válido, decodificando...');
-                    const documentNumber = decodeToken(token);
-                    console.log('📄 DEBUG: DocumentNumber final:', documentNumber);
-                    alert('DEBUG: DocumentNumber: ' + documentNumber);
-                    
-                    if (documentNumber) {
-                        document.getElementById('content').innerHTML = `<p>Document Number: ${documentNumber}</p>`;
-                    } else {
-                        document.getElementById('content').innerHTML = '<p>Não podemos exibir as informações. Documento não foi informado</p>';
-                    }
-                } else {
-                    document.getElementById('content').innerHTML = '<p>Não podemos exibir as informações, pois o token recebido não é válido</p>';
-                }
-            } else {
-                console.log('❌ DEBUG: Nenhum token encontrado');
-                alert('DEBUG: Nenhum token foi encontrado');
-                document.getElementById('content').innerHTML = '<p>Não podemos exibir as informações, pois não foi informado nenhum token</p>';
-            }
-            
-            console.log('🏁 DEBUG: authCommitment() finalizado');
+          } else {
+            document.getElementById('content').innerHTML = '<p>Não podemos exibir as informações</p>';
+          }
         }
+      };
 
-        document.addEventListener('DOMContentLoaded', authCommitment);
-    </script>
+      // EXEMPLO IMPLEMENTAÇÃO PERSONAL-WEB
+      window.addEventListener('message', async (event) => {
+
+        const { token, language, clientKey } = event.data;
+
+        if (token && language && clientKey) {
+          localStorage.setItem("auth", token);
+          const isValid = await validateToken(token);
+          if (isValid) {
+            const documentNumber = decodeToken(token);
+            if (documentNumber) {
+              document.getElementById('content').innerHTML = `<p>Document Number: ${documentNumber}</p>`;
+            } else {
+              document.getElementById('content').innerHTML = '<p>Não podemos exibir as informações</p>';
+            }
+          } else {
+            document.getElementById('content').innerHTML = '<p>Não podemos exibir as informações</p>';
+          }
+        } else {
+          document.getElementById('content').innerHTML = '<p>Não podemos exibir as informações, dados ausentes ou inválidos.</p>';
+        }
+      });
+
+      // Caso o token já esteja presente na Web
+      if (token) {
+        const isValid = await validateToken(token);
+        if (isValid) {
+          const documentNumber = decodeToken(token);
+          if (documentNumber) {
+            document.getElementById('content').innerHTML = `<p>Document Number: ${documentNumber}</p>`;
+          } else {
+            document.getElementById('content').innerHTML = '<p>Não podemos exibir as informações. Documento não foi informado</p>';
+          }
+        } else {
+          document.getElementById('content').innerHTML = '<p>Não podemos exibir as informações, pois o token recebido não é válido</p>';
+        }
+      } else {
+        document.getElementById('content').innerHTML = '<p>Não podemos exibir as informações, pois não foi informado nenhum token</p>';
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', authCommitment);
+  </script>
+
+
+
 </body>
+
 </html>
