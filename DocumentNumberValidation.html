@@ -48,8 +48,8 @@
       // Android
         window.alert('antes do if personal')
         window.alert(JSON.stringify(window.Personal));
-        const content = JSON.stringify(window);
-        document.getElementById('content').innerHTML = `<p>Document Number: ${content}</p>`;
+        const text = JSON.stringify(window);
+        document.getElementById('content').innerHTML = `<p>Document Number: ${text}</p>`;
       if (window.Personal) {
           window.alert(JSON.stringify(window.Personal));
         token = window.Personal.getToken('anyParam');
@@ -103,22 +103,22 @@
         }
       });
 
-      // Caso o token já esteja presente na Web
-      if (token) {
-        const isValid = await validateToken(token);
-        if (isValid) {
-          const documentNumber = decodeToken(token);
-          if (documentNumber) {
-            document.getElementById('content').innerHTML = `<p>Document Number: ${documentNumber}</p>`;
-          } else {
-            document.getElementById('content').innerHTML = '<p>Não podemos exibir as informações. Documento não foi informado</p>';
-          }
-        } else {
-          document.getElementById('content').innerHTML = '<p>Não podemos exibir as informações, pois o token recebido não é válido</p>';
-        }
-      } else {
-        document.getElementById('content').innerHTML = '<p>Não podemos exibir as informações, pois não foi informado nenhum token</p>';
-      }
+      // // Caso o token já esteja presente na Web
+      // if (token) {
+      //   const isValid = await validateToken(token);
+      //   if (isValid) {
+      //     const documentNumber = decodeToken(token);
+      //     if (documentNumber) {
+      //       document.getElementById('content').innerHTML = `<p>Document Number: ${documentNumber}</p>`;
+      //     } else {
+      //       document.getElementById('content').innerHTML = '<p>Não podemos exibir as informações. Documento não foi informado</p>';
+      //     }
+      //   } else {
+      //     document.getElementById('content').innerHTML = '<p>Não podemos exibir as informações, pois o token recebido não é válido</p>';
+      //   }
+      // } else {
+      //   document.getElementById('content').innerHTML = '<p>Não podemos exibir as informações, pois não foi informado nenhum token</p>';
+      // }
     }
 
     setTimeout(() => {
