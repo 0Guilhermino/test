@@ -3,244 +3,175 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Debug Android - Passo a Passo</title>
+    <title>Debug Android WebView</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.0/axios.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jwt-decode/3.1.2/jwt-decode.min.js"></script>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            background-color: #f5f5f5;
-        }
-        .debug-container {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-        .step {
-            margin: 10px 0;
-            padding: 10px;
-            border-left: 4px solid #007bff;
-            background-color: #f8f9fa;
-        }
-        .step.success {
-            border-left-color: #28a745;
-            background-color: #d4edda;
-        }
-        .step.error {
-            border-left-color: #dc3545;
-            background-color: #f8d7da;
-        }
-        .step.warning {
-            border-left-color: #ffc107;
-            background-color: #fff3cd;
-        }
-        .code {
-            background-color: #f1f1f1;
-            padding: 5px;
-            border-radius: 4px;
-            font-family: monospace;
-            font-size: 12px;
-        }
-        .result {
-            margin-top: 20px;
-            padding: 15px;
-            border: 2px solid #007bff;
-            border-radius: 8px;
-            background-color: #e3f2fd;
-        }
-        button {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            margin: 5px;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-    </style>
 </head>
 <body>
-    <div class="debug-container">
-        <h1>🔍 Debug Android - Autenticação Passo a Passo</h1>
-        
-        <div class="debug-container">
-            <h2>Simulador de Interface Android</h2>
-            <button onclick="simulateAndroidInterface()">🤖 Simular window.Personal (Android)</button>
-            <button onclick="clearDebug()">🧹 Limpar Debug</button>
-        </div>
-
-        <div id="debugSteps"></div>
-        
-        <div id="content" class="result">
-            <strong>Resultado Final:</strong> Aguardando execução...
-        </div>
+    <div id="content">
+        <p>Carregando...</p>
     </div>
 
     <script>
-        let debugSteps = [];
-
-        function addDebugStep(message, type = 'info', data = null) {
-            const timestamp = new Date().toLocaleTimeString();
-            debugSteps.push({
-                timestamp,
-                message,
-                type,
-                data
-            });
-            updateDebugDisplay();
-        }
-
-        function updateDebugDisplay() {
-            const container = document.getElementById('debugSteps');
-            container.innerHTML = debugSteps.map((step, index) => `
-                <div class="step ${step.type}">
-                    <strong>Passo ${index + 1} [${step.timestamp}]:</strong> ${step.message}
-                    ${step.data ? `<div class="code">${JSON.stringify(step.data, null, 2)}</div>` : ''}
-                </div>
-            `).join('');
-        }
-
-        function clearDebug() {
-            debugSteps = [];
-            updateDebugDisplay();
-            document.getElementById('content').innerHTML = '<strong>Resultado Final:</strong> Aguardando execução...';
-        }
-
-        function simulateAndroidInterface() {
-            // Simula a interface do Android
-            const mockToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwiZG9jdW1lbnROdW1iZXIiOiIxMjM0NTY3ODkiLCJpYXQiOjE1MTYyMzkwMjJ9.mockSignature';
-            
-            window.Personal = {
-                getToken: function(param) {
-                    addDebugStep(`🤖 Android: Chamando window.Personal.getToken('${param}')`, 'info');
-                    return mockToken;
-                },
-                getLanguage: function() {
-                    addDebugStep('🤖 Android: Chamando window.Personal.getLanguage()', 'info');
-                    return 'pt-BR';
-                },
-                getClientKey: function() {
-                    addDebugStep('🤖 Android: Chamando window.Personal.getClientKey()', 'info');
-                    return 'android-client-key-123';
-                }
-            };
-
-            // Inicia o processo de debug
-            authCommitmentWithDebug();
-        }
-
         function validateToken(token) {
-            addDebugStep('🔐 Iniciando validação do token...', 'info');
-            addDebugStep(`Token a ser validado: ${token.substring(0, 20)}...`, 'info');
+            console.log('🔐 DEBUG: Iniciando validateToken com token:', token);
             
-            // Simula uma validação bem-sucedida para fins de debug
-            return new Promise((resolve) => {
-                setTimeout(() => {
-                    addDebugStep('✅ Token validado com sucesso (simulado)', 'success');
-                    resolve(true);
-                }, 1000);
-            });
+            return axios.get('https://prod.globalhealth.mv/uaa/validate/token', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+                .then(response => {
+                    console.log('✅ DEBUG: Token validado com sucesso:', response);
+                    return true;
+                })
+                .catch(error => {
+                    console.error('❌ DEBUG: Erro na validação do token:', error.response ? error.response.data : error.message);
+                    return false;
+                });
         }
 
         function decodeToken(token) {
-            addDebugStep('🔓 Iniciando decodificação do token...', 'info');
+            console.log('🔓 DEBUG: Iniciando decodeToken com token:', token);
             
             try {
-                // Para fins de debug, vamos simular a decodificação
-                const mockDecoded = {
-                    sub: "1234567890",
-                    documentNumber: "123456789",
-                    iat: 1516239022
-                };
-                
-                addDebugStep('✅ Token decodificado com sucesso', 'success', mockDecoded);
-                addDebugStep(`📄 Document Number extraído: ${mockDecoded.documentNumber}`, 'success');
-                
-                return mockDecoded.documentNumber;
+                const decoded = jwt_decode(token);
+                console.log('✅ DEBUG: Token decodificado:', decoded);
+                console.log('📄 DEBUG: documentNumber extraído:', decoded.documentNumber);
+                return decoded.documentNumber;
             } catch (error) {
-                addDebugStep(`❌ Erro ao decodificar token: ${error.message}`, 'error');
+                console.error('❌ DEBUG: Erro ao decodificar o token:', error.message);
                 return null;
             }
         }
 
-        async function authCommitmentWithDebug() {
-            addDebugStep('🚀 INÍCIO: Executando authCommitment()', 'info');
+        async function authCommitment() {
+            console.log('🚀 DEBUG: Iniciando authCommitment()');
             
             let token = '';
             let language = '';
             let clientKey = '';
 
-            addDebugStep('📱 Verificando se estamos no ambiente Android...', 'info');
-
-            // TRECHO ESPECÍFICO DO ANDROID COM DEBUG DETALHADO
+            // DEBUG: Verificar se window.Personal existe
+            console.log('🔍 DEBUG: Verificando window.Personal:', window.Personal);
+            
             if (window.Personal) {
-                addDebugStep('✅ ANDROID DETECTADO: window.Personal está disponível', 'success');
+                console.log('✅ DEBUG: window.Personal existe:', window.Personal);
+                alert('DEBUG: window.Personal encontrado!');
                 
-                addDebugStep('🎯 Passo 1: Obtendo token via window.Personal.getToken()', 'info');
+                console.log('📱 DEBUG: Entrando no bloco Android');
+                alert('DEBUG: Entrou no bloco Android (window.Personal)');
+                
+                console.log('🎯 DEBUG: Chamando window.Personal.getToken()');
                 token = window.Personal.getToken('anyParam');
-                addDebugStep(`✅ Token obtido: ${token ? token.substring(0, 30) + '...' : 'VAZIO'}`, token ? 'success' : 'error');
+                console.log('🔑 DEBUG: Token obtido:', token);
+                alert('DEBUG: Token obtido: ' + (token ? token.substring(0, 50) + '...' : 'VAZIO'));
                 
                 if (token) {
-                    addDebugStep('💾 Passo 2: Salvando token no localStorage', 'info');
-                    // Simulamos o localStorage para fins de debug
-                    addDebugStep('✅ Token salvo no localStorage com chave "auth"', 'success');
+                    console.log('💾 DEBUG: Salvando token no localStorage');
+                    localStorage.setItem("auth", token);
+                    alert('DEBUG: Token salvo no localStorage');
                     
-                    addDebugStep('🌐 Passo 3: Obtendo idioma via window.Personal.getLanguage()', 'info');
+                    console.log('🌐 DEBUG: Obtendo language');
                     language = window.Personal.getLanguage();
-                    addDebugStep(`✅ Idioma obtido: ${language}`, 'success');
+                    console.log('🌍 DEBUG: Language obtido:', language);
+                    alert('DEBUG: Language: ' + language);
                     
-                    addDebugStep('🔑 Passo 4: Obtendo clientKey via window.Personal.getClientKey()', 'info');
+                    console.log('🔑 DEBUG: Obtendo clientKey');
                     clientKey = window.Personal.getClientKey();
-                    addDebugStep(`✅ ClientKey obtido: ${clientKey}`, 'success');
-                    
-                    // Continuando com a validação
-                    addDebugStep('🔐 Passo 5: Iniciando validação do token...', 'info');
-                    const isValid = await validateToken(token);
-                    
-                    if (isValid) {
-                        addDebugStep('✅ Token válido! Prosseguindo para decodificação...', 'success');
-                        
-                        addDebugStep('🔓 Passo 6: Decodificando token para extrair documentNumber...', 'info');
-                        const documentNumber = decodeToken(token);
-                        
-                        if (documentNumber) {
-                            addDebugStep(`🎉 SUCESSO TOTAL! Document Number: ${documentNumber}`, 'success');
-                            document.getElementById('content').innerHTML = `
-                                <strong>✅ SUCESSO - Android:</strong><br>
-                                Document Number: ${documentNumber}<br>
-                                Language: ${language}<br>
-                                Client Key: ${clientKey}
-                            `;
-                        } else {
-                            addDebugStep('❌ ERRO: Não foi possível extrair documentNumber do token', 'error');
-                            document.getElementById('content').innerHTML = '<strong>❌ ERRO:</strong> Não podemos exibir as informações - documento não informado';
-                        }
-                    } else {
-                        addDebugStep('❌ ERRO: Token inválido', 'error');
-                        document.getElementById('content').innerHTML = '<strong>❌ ERRO:</strong> Token inválido';
-                    }
+                    console.log('🗝️ DEBUG: ClientKey obtido:', clientKey);
+                    alert('DEBUG: ClientKey: ' + clientKey);
                 } else {
-                    addDebugStep('❌ ERRO: Token não foi obtido do Android', 'error');
-                    document.getElementById('content').innerHTML = '<strong>❌ ERRO:</strong> Token não obtido';
+                    console.log('❌ DEBUG: Token está vazio');
+                    alert('DEBUG: ERRO - Token vazio!');
                 }
             } else {
-                addDebugStep('⚠️ window.Personal não encontrado - não é ambiente Android', 'warning');
-                document.getElementById('content').innerHTML = '<strong>⚠️ AVISO:</strong> Não é ambiente Android';
+                console.log('❌ DEBUG: window.Personal NÃO existe');
+                alert('DEBUG: window.Personal NÃO encontrado!');
             }
 
-            addDebugStep('🏁 FIM: authCommitment() executado', 'info');
+            // iOS
+            window.setConfig = async function (tokenParam, languageParam, clientKeyParam) {
+                console.log('🍎 DEBUG: setConfig chamado (iOS)');
+                
+                if (tokenParam && languageParam) {
+                    token = tokenParam;
+                    localStorage.setItem("auth", token);
+                    language = languageParam;
+                    clientKey = clientKeyParam;
+                    const isValid = await validateToken(token);
+                    if (isValid) {
+                        const documentNumber = decodeToken(token);
+                        if (documentNumber) {
+                            document.getElementById('content').innerHTML = `<p>Document Number: ${documentNumber}</p>`;
+                        } else {
+                            document.getElementById('content').innerHTML = '<p>Não podemos exibir as informações</p>';
+                        }
+                    } else {
+                        document.getElementById('content').innerHTML = '<p>Não podemos exibir as informações</p>';
+                    }
+                }
+            };
+
+            // EXEMPLO IMPLEMENTAÇÃO PERSONAL-WEB
+            window.addEventListener('message', async (event) => {
+                console.log('💬 DEBUG: Mensagem recebida (Personal-Web):', event.data);
+
+                const { token, language, clientKey } = event.data;
+
+                if (token && language && clientKey) {
+                    localStorage.setItem("auth", token);
+                    const isValid = await validateToken(token);
+                    if (isValid) {
+                        const documentNumber = decodeToken(token);
+                        if (documentNumber) {
+                            document.getElementById('content').innerHTML = `<p>Document Number: ${documentNumber}</p>`;
+                        } else {
+                            document.getElementById('content').innerHTML = '<p>Não podemos exibir as informações</p>';
+                        }
+                    } else {
+                        document.getElementById('content').innerHTML = '<p>Não podemos exibir as informações</p>';
+                    }
+                } else {
+                    document.getElementById('content').innerHTML = '<p>Não podemos exibir as informações, dados ausentes ou inválidos.</p>';
+                }
+            });
+
+            // Caso o token já esteja presente na Web
+            console.log('🌐 DEBUG: Verificando se já existe token:', token);
+            
+            if (token) {
+                console.log('✅ DEBUG: Token encontrado, validando...');
+                alert('DEBUG: Iniciando validação do token');
+                
+                const isValid = await validateToken(token);
+                console.log('🔐 DEBUG: Resultado da validação:', isValid);
+                alert('DEBUG: Token válido: ' + isValid);
+                
+                if (isValid) {
+                    console.log('✅ DEBUG: Token válido, decodificando...');
+                    const documentNumber = decodeToken(token);
+                    console.log('📄 DEBUG: DocumentNumber final:', documentNumber);
+                    alert('DEBUG: DocumentNumber: ' + documentNumber);
+                    
+                    if (documentNumber) {
+                        document.getElementById('content').innerHTML = `<p>Document Number: ${documentNumber}</p>`;
+                    } else {
+                        document.getElementById('content').innerHTML = '<p>Não podemos exibir as informações. Documento não foi informado</p>';
+                    }
+                } else {
+                    document.getElementById('content').innerHTML = '<p>Não podemos exibir as informações, pois o token recebido não é válido</p>';
+                }
+            } else {
+                console.log('❌ DEBUG: Nenhum token encontrado');
+                alert('DEBUG: Nenhum token foi encontrado');
+                document.getElementById('content').innerHTML = '<p>Não podemos exibir as informações, pois não foi informado nenhum token</p>';
+            }
+            
+            console.log('🏁 DEBUG: authCommitment() finalizado');
         }
 
-        // Inicialização
-        document.addEventListener('DOMContentLoaded', function() {
-            addDebugStep('📄 DOM carregado, pronto para debug', 'info');
-        });
+        document.addEventListener('DOMContentLoaded', authCommitment);
     </script>
 </body>
 </html>
